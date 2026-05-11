@@ -14,13 +14,8 @@
   <a href="https://arakel2.github.io/css-editor/">👉 Live Demo</a> ·
   <a href="https://github.com/arakel2/css-editor/releases">⬇️ Download</a>
 </p>
+
 ---
-
-## Screenshot
-
-![CSS Editor Screenshot](assets/screenshot.webp)
-
-
 
 ## ✨ Features
 
@@ -39,6 +34,9 @@
 | 🎨 Easy customization | Add your own templates, color palettes, and snippets |
 
 
+## Screenshot
+
+![CSS Editor Screenshot](assets/screenshot.webp)
 
 ## 🚀 Quick Start
 
