@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<!--
+    CSS Editor – A lightweight, standalone CSS editor for the browser.
+
+    Author:  Andreas Keller (arakel2)
+    License: MIT
+    Website: https://github.com/arakel2/css-editor
+-->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <title>CSS Editor</title>
+
+    <!-- ===== Tool-CSS (affects only the editor UI, NOT the iframe preview) ===== -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f6f8fa;
+            color: #24292f;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 100vh;
+        }
+
+        /* ===== Panels ===== */
+        .panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editor-panel {
+            border-right: 1px solid #d0d7de;
+        }
+
+        /* ===== Fixed Panel Headers ===== */
+        .panel-header {
+            flex-shrink: 0;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d0d7de;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            z-index: 10;
+            flex-wrap: wrap;
+        }
+
+        .panel-header .title {
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        /* Spacer pushes controls to the right */
+        .panel-header .spacer,
+        .editor-header .spacer {
+            flex: 1;
+        }
+
+        /* ===== Scrollable Panel Body ===== */
+        .panel-body {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #editor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        #preview-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+        }
+
+        /* ===== Editor Header Grid ===== */
+        .editor-header {
+            flex-shrink: 0;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            grid-template-rows: auto auto;
+            border-bottom: 1px solid #d0d7de;
+        }
+
+        /* Title block – spans both rows */
+        .editor-title {
+            grid-row: 1 / 3;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background-color: #f0f3f6;
+            border-right: 1px solid #d0d7de;
+            font-weight: 700;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .editor-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        /* ===== Toolbars ===== */
+        .panel-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background-color: #f6f8fa;
+            font-size: 13px;
+        }
+
+        .panel-toolbar select {
+            font-size: 12px;
+            padding: 3px 8px;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .panel-toolbar .btn {
+            background: none;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            padding: 3px 7px;
+            cursor: pointer;
+            font-size: 13px;
+            line-height: 1;
+            transition: background-color 0.15s;
+        }
+
+        .panel-toolbar .btn:hover {
+            background-color: #e1e4e8;
+        }
+
+        #slot-select {
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #jumpmarks {
+            max-width: 100px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+
+        /* ===== Controls (buttons, selects) ===== */
+        .panel-header select {
+            font-size: 12px;
+            padding: 4px 8px;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+            max-width: 180px;
+        }
+
+        .panel-header .btn {
+            background: none;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            transition: background-color 0.15s;
+        }
+
+        .panel-header .btn:hover {
+            background-color: #e1e4e8;
+        }
+
+        /* ===== Header Separator ===== */
+        .separator {
+            width: 1px;
+            height: 18px;
+            background-color: #d0d7de;
+            margin: 0 8px;
+            flex-shrink: 0;
+        }
+
+        /* ===== Slot Toolbar ===== */
+        .slot-bar {
+            background-color: #eef1f5;
+            border-bottom: 1px solid #d0d7de;
+            font-size: 12px;
+        }
+
+        .slot-bar .btn {
+            font-size: 12px;
+        }
+
+        /* ===== About Modal ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 8px;
+            max-width: 640px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+            line-height: 1.6;
+            color: #24292f;
+        }
+
+        .modal h2 {
+            margin: 0 0 12px 0;
+            font-size: 18px;
+        }
+
+        .modal h3 {
+            margin: 16px 0 6px 0;
+            font-size: 14px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal p {
+            margin: 0 0 8px 0;
+        }
+
+        .modal kbd {
+            background: #eff1f3;
+            border: 1px solid #d0d7de;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .modal table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+
+        .modal td {
+            padding: 4px 8px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        .modal td:first-child {
+            white-space: nowrap;
+            font-weight: 600;
+            width: 80px;
+        }
+
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: #000;
+        }
+
+        .modal .credits {
+            margin-top: 16px;
+            padding-top: 12px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .modal .credits a {
+            color: #0969da;
+            text-decoration: none;
+        }
+
+        .editor-panel {
+            position: relative;
+            /* anchor for panels */
+        }
+
+        /* ===== Shared Panel Styles (Color + Snippet) ===== */
+        .color-panel,
+        .snippet-panel {
+            display: none;
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 50;
+            background: #fff;
+            border: 1px solid #d0d7de;
+            border-radius: 0 0 0 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            padding: 12px;
+            max-width: 50%;
+            max-height: 100%;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        .color-panel.active,
+        .snippet-panel.active {
+            display: block;
+        }
+
+        .snippet-group {
+            margin-bottom: 10px;
+        }
+
+        .snippet-group-name {
+            font-weight: 600;
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .snippet-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .snippet-btn {
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .snippet-btn:hover {
+            background-color: #ddf4ff;
+            border-color: #54aeff;
+        }
+
+        .snippet-btn.snippet-block {
+            /* width: 100%; */
+            text-align: left;
+            padding: 5px 8px;
+        }
+
+        /* ===== Color Panel ===== */
+        .color-panel-group {
+            margin-bottom: 8px;
+        }
+
+        .color-panel-group-name {
+            font-weight: 600;
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .color-panel-swatches {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+        }
+
+        .color-swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 3px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.25);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            position: relative;
+        }
+
+        .color-panel-divider {
+            border: none;
+            border-top: 1px solid #e8ecf0;
+            margin: 10px 0;
+        }
+
+        .color-panel-custom {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-panel-custom input[type="color"] {
+            width: 32px;
+            height: 28px;
+            padding: 0;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            cursor: pointer;
+            background: none;
+        }
+
+        .color-panel-custom .color-hex {
+            font-family: "Fira Code", monospace;
+            font-size: 13px;
+            color: #24292f;
+            min-width: 65px;
+        }
+
+        .color-panel-custom .btn {
+            font-size: 11px;
+            padding: 4px 10px;
+            margin-left: auto;
+        }
+
+        /* ===== Viewport Simulation ===== */
+        .panel-body.preview-body {
+            display: flex;
+            justify-content: center;
+            background-color: #e9ecef;
+        }
+
+        #preview-frame {
+            height: 100%;
+            border: none;
+            background: #fff;
+            transition: width 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #preview-frame.has-viewport {
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- ===== Editor Panel ===== -->
+        <div class="panel editor-panel">
+            <!-- Editor Header (Grid: title left, toolbars right) -->
+            <div class="editor-header">
+
+                <!-- Title Block (spans both rows) -->
+                <div class="editor-title">
+                    <img src="assets/icon-180x180.png" alt="CSS Editor" class="editor-icon">
+                    <span>CSS Editor</span>
+                </div>
+
+                <!-- Toolbar Row 1: File & Slots -->
+                <div class="panel-toolbar" style="border-bottom: 1px solid #d0d7de;">
+                    <button class="btn" id="btn-load" title="Load CSS">📂</button>
+                    <button class="btn" id="btn-save" title="Download CSS">⬇️</button>
+                    <button class="btn" id="btn-reset" title="Load Default-CSS">🔄</button>
+                    <span class="separator"></span>
+                    <select id="slot-select" title="Slot">
+                        <option value="">— Slot —</option>
+                    </select>
+                    <button class="btn" id="btn-slot-save" title="Save Slot as">💾</button>
+                    <button class="btn" id="btn-slot-rename" title="Rename Slot">✏️</button>
+                    <button class="btn" id="btn-slot-delete" title="Delete Slot">🗑️</button>
+                    <span class="spacer"></span>
+                    <button class="btn" id="btn-about" title="About / Help">ℹ️</button>
+                    <input type="file" id="file-input" accept=".css" style="display:none">
+                </div>
+
+                <!-- Toolbar Row 2: Navigation & Tools -->
+                <div class="panel-toolbar">
+                    <span>🔖</span>
+                    <select id="jumpmarks" title="Jump Marks">
+                        <option value="">— Section —</option>
+                    </select>
+                    <span class="separator"></span>
+                    <button class="btn" id="btn-colors" title="Color Palette">🎨</button>
+                    <button class="btn" id="btn-snippets" title="Snippets">✂️</button>
+                </div>
+
+            </div>
+            <!-- Color Panel -->
+            <div class="color-panel" id="color-panel">
+                <div id="color-palettes"></div>
+                <hr class="color-panel-divider">
+                <div class="color-panel-custom">
+                    <input type="color" id="color-picker" value="#0969da" title="Pick a custom color">
+                    <span class="color-hex" id="color-hex">#0969da</span>
+                    <button class="btn" id="btn-color-insert" title="Insert at cursor">Insert</button>
+                </div>
+            </div>
+            <!-- Snippet Panel -->
+            <div class="snippet-panel" id="snippet-panel">
+                <div id="snippet-groups"></div>
+            </div>
+            <div class="panel-body">
+                <div id="editor"></div>
+            </div>
+        </div>
+
+        <!-- ===== Preview Panel ===== -->
+        <div class="panel preview-panel">
+            <div class="panel-header">
+                <span class="title">👁️ Preview</span>
+                <span class="spacer"></span>
+                <select id="viewport-select" title="Viewport width">
+                    <option value="100%">Responsive – 100%</option>
+                    <option value="1280px">Desktop – 1280px</option>
+                    <option value="1024px">Laptop – 1024px</option>
+                    <option value="768px">Tablet – 768px</option>
+                    <option value="480px">Mobile L – 480px</option>
+                    <option value="375px">Mobile M – 375px</option>
+                    <option value="320px">Mobile S – 320px</option>
+                </select>
+                <select id="sample-select" title="Choose Sample HTML"></select>
+            </div>
+            <div class="panel-body preview-body">
+                <iframe id="preview-frame"></iframe>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===== About Modal ===== -->
+    <div class="modal-overlay" id="about-modal">
+        <div class="modal">
+            <button class="modal-close" id="modal-close" title="Close">&times;</button>
+
+            <img src="assets/favicon-32x32.png" style="float:left; margin-right: 15px;">
+            <h2>CSS Editor</h2>
+            <p>A lightweight, standalone CSS editor for quickly testing and
+                tweaking stylesheets — right in your browser.</p>
+
+            <h3>Quick Start</h3>
+            <table>
+                <tr>
+                    <td>📝 Edit</td>
+                    <td>Write or paste CSS on the left — the preview updates instantly.</td>
+                </tr>
+                <tr>
+                    <td>👁️ Preview</td>
+                    <td>Pick an HTML sample from the dropdown to test your styles against.</td>
+                </tr>
+                <tr>
+                    <td>💾 Versions</td>
+                    <td>Save named versions of your CSS. Switch between them anytime.</td>
+                </tr>
+                <tr>
+                    <td>📂 File</td>
+                    <td>Load a <kbd>.css</kbd> file from disk or download ⬇️ your current CSS.</td>
+                </tr>
+                <tr>
+                    <td>🔄 Reset</td>
+                    <td>Restore the built-in default stylesheet.</td>
+                </tr>
+            </table>
+
+            <h3>Section Jumps</h3>
+            <p>Add comments like <kbd>/* === Section Name === */</kbd>
+                (min. 3 <kbd>=</kbd>) to your CSS.<br> They appear in the
+                <em>Section</em> dropdown for quick navigation.
+            </p>
+
+            <h3>Keyboard Shortcuts</h3>
+            <table>
+                <tr>
+                    <td><kbd>Ctrl</kbd>+<kbd>F</kbd> &nbsp; Find</td>
+                    <td style="width:20%">&nbsp;</td>
+                    <td style="font-weight: 600"><kbd>Ctrl</kbd>+<kbd>Z</kbd> &nbsp; Undo</td>
+                </tr>
+                <tr>
+                    <td><kbd>Ctrl</kbd>+<kbd>H</kbd> &nbsp; Find &amp; Replace</td>
+                    <td>&nbsp;</td>
+                    <td style="font-weight: 600"><kbd>Ctrl</kbd>+<kbd>Y</kbd> &nbsp; Redo</td>
+                </tr>
+            </table>
+
+            <div class="credits">
+                <p>Built with <a href="https://ace.c9.io" target="_blank" rel="noopener">ACE Editor</a>
+                    — a high-performance code editor for the web.</p>
+                <p><a href="https://github.com/arakel2/css-editor" target="_blank" rel="noopener">CSS Editor</a> is open
+                    source under the
+                    MIT License. &copy; 2026 by Andreas Keller (arakel2)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ACE Editor ===== -->
+    <script src="ace/ace.js"></script>
+    <script src="ace/mode-css.js"></script>
+    <!-- <script src="ace/theme-github.js"></script> -->
+    <script src="theme-github_light_default"></script>
+    <script src="ace/ext-language_tools.js"></script>
+
+    <!-- ===== Samples (each file registers into window.CSS_SAMPLES) ===== -->
+    <script src="samples/sample1.js"></script>
+    <script src="samples/sample2.js"></script>
+    <script src="samples/sample3.js"></script>
+    <script src="samples/sample4.js"></script>
+    <script src="samples/sample5.js"></script>
+    <script src="samples/sample6.js"></script>
+    <script src="samples/sample7.js"></script>
+
+    <!-- ===== Default CSS content ===== -->
+    <script src="style.js"></script>
+
+    <!-- Palettes -->
+    <script src="palettes/default.js"></script>
+
+    <!-- Snippets -->
+    <script src="snippets/default.js"></script>
+
+    <!-- ===== App Logic ===== -->
+    <script>
+        (function () {
+            'use strict';
+
+            // ---- DOM References ----
+            const iframe = document.getElementById('preview-frame');
+            const jumpmarkSelect = document.getElementById('jumpmarks');
+            const sampleSelect = document.getElementById('sample-select');
+            const btnLoad = document.getElementById('btn-load');
+            const btnSave = document.getElementById('btn-save');
+            const fileInput = document.getElementById('file-input');
+            const slotSelect = document.getElementById('slot-select');
+            const LS_ACTIVE_SLOT = 'css-editor-active-slot';
+            const btnSlotSave = document.getElementById('btn-slot-save');
+            const btnSlotRename = document.getElementById('btn-slot-rename');
+            const btnSlotDelete = document.getElementById('btn-slot-delete');
+            const btnReset = document.getElementById('btn-reset');
+            const btnColors = document.getElementById('btn-colors');
+            const colorPanel = document.getElementById('color-panel');
+            const colorPalettes = document.getElementById('color-palettes');
+            const colorPicker = document.getElementById('color-picker');
+            const colorHex = document.getElementById('color-hex');
+            const btnColorInsert = document.getElementById('btn-color-insert');
+            const viewportSelect = document.getElementById('viewport-select');
+            const btnSnippets = document.getElementById('btn-snippets');
+            const snippetPanel = document.getElementById('snippet-panel');
+            const snippetGroups = document.getElementById('snippet-groups');
+
+
+            // ---- ACE Editor Setup ----
+            const editor = ace.edit('editor');
+            editor.setTheme('ace/theme/github');
+            editor.session.setMode('ace/mode/css');
+            editor.setOptions({
+                fontSize: 15,
+                showPrintMargin: false,
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                useWorker: false,
+                wrap: true
+            });
+
+            // ---- State ----
+            let currentFileName = 'style.css';
+
+            // =========================================================
+            //  iframe Preview
+            // =========================================================
+
+            /**
+             * Initialize the iframe with a minimal HTML document.
+             * Creates a <style id=" user-css"> that we update on every change.
+             */
+            function initIframe() {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                doc.open();
+                doc.write([
+                    '<!DOCTYPE html>',
+                    '<html><head>',
+                    '<meta charset="UTF-8">',
+                    '<style id="user-css"></style>',
+                    '</head><body></body></html>'
+                ].join(''));
+                doc.close();
+            }
+
+            /**
+             * Update only the CSS inside the iframe.
+             * @param {string} css - The CSS source from the editor
+             */
+            function updatePreviewCSS(css) {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                const styleEl = doc.getElementById('user-css');
+                if (styleEl) styleEl.textContent = css;
+            }
+
+            /**
+             * Update only the HTML body inside the iframe.
+             * @param {string} html - The HTML content of a sample
+             */
+            function updatePreviewHTML(html) {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                if (doc.body) doc.body.innerHTML = html;
+            }
+
+            // =========================================================
+            //  Samples Dropdown
+            // =========================================================
+
+            /**
+             * Populate the sample <select> from the global CSS_SAMPLES array.
+             */
+            function populateSamples() {
+                sampleSelect.innerHTML = '';
+                const samples = window.CSS_SAMPLES || [];
+                samples.forEach(function (sample, index) {
+                    const opt = document.createElement('option');
+                    opt.value = index;
+                    opt.textContent = sample.name;
+                    sampleSelect.appendChild(opt);
+                });
+            }
+
+            /**
+             * Load a sample by index into the preview iframe.
+             * @param {number} index - Index in CSS_SAMPLES
+             */
+            function loadSample(index) {
+                const samples = window.CSS_SAMPLES || [];
+                if (!samples[index]) return;
+                updatePreviewHTML(samples[index].html);
+            }
+
+            // =========================================================
+            //  Jumpmarks (CSS comment sections)
+            // =========================================================
+
+            /**
+             * Parse comments like /* ==== Title ==== * / and populate the dropdown.
+             * Requires at least 3 '=' on each side of the title.
+             * @param {string} cssText - The full CSS source
+             */
+            function updateJumpmarks(cssText) {
+                jumpmarkSelect.innerHTML = '<option value="">— Section —</option>';
+                const lines = cssText.split('\n');
+                const regex = /\/\*\s*={3,}\s*(.+?)\s*={3,}\s*\*\//;
+
+                lines.forEach(function (line, index) {
+                    const match = line.match(regex);
+                    if (match) {
+                        const opt = document.createElement('option');
+                        opt.value = index + 1;  // ACE gotoLine() is 1-based
+                        opt.textContent = match[1].trim();
+                        jumpmarkSelect.appendChild(opt);
+                    }
+                });
+            }
+
+            // =========================================================
+            //  File Load / Save
+            // =========================================================
+
+            /**
+             * Download the current editor content as a .css file.
+             */
+            function saveCSS() {
+                const css = editor.getValue();
+                const blob = new Blob([css], { type: 'text/css' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentFileName;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            /**
+             * Read a CSS file and load its content into the editor.
+             * @param {File} file - A .css file from the file input
+             */
+            function loadCSSFile(file) {
+                currentFileName = file.name;
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    editor.setValue(e.target.result, -1);  // -1 = cursor at start
+                };
+                reader.readAsText(file);
+            }
+
+            // =========================================================
+            //  localStorage – Autosave & Slots
+            // =========================================================
+
+            const LS_AUTOSAVE = 'css-editor-autosave';
+            const LS_SLOTS = 'css-editor-slots';
+
+            /** Debounce timer for autosave */
+            let autosaveTimer = null;
+
+            /**
+             * Autosave current editor content (debounced, 500ms).
+             * Saves to the active slot if one is selected, otherwise to autosave.
+             * @param {string} css - Current CSS from editor
+             */
+            function autosave(css) {
+                clearTimeout(autosaveTimer);
+                autosaveTimer = setTimeout(function () {
+                    const activeSlot = slotSelect.value;
+                    if (activeSlot) {
+                        // Save directly into the active slot
+                        const slots = getSlots();
+                        slots[activeSlot] = css;
+                        saveSlots(slots);
+                    } else {
+                        // No slot selected → generic autosave
+                        localStorage.setItem(LS_AUTOSAVE, css);
+                    }
+                }, 500);
+            }
+
+
+            /**
+             * Get all saved slots from localStorage.
+             * @returns {Object} Slot map { name: cssString, ... }
+             */
+            function getSlots() {
+                try {
+                    return JSON.parse(localStorage.getItem(LS_SLOTS)) || {};
+                } catch (e) {
+                    return {};
+                }
+            }
+
+            /**
+             * Persist the full slots object to localStorage.
+             * @param {Object} slots - Slot map
+             */
+            function saveSlots(slots) {
+                localStorage.setItem(LS_SLOTS, JSON.stringify(slots));
+            }
+
+            /**
+             * Populate the slot <select> dropdown.
+             */
+            function populateSlotDropdown() {
+                slotSelect.innerHTML = '<option value="">— Slot —</option>';
+                const slots = getSlots();
+                Object.keys(slots).forEach(function (name) {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    slotSelect.appendChild(opt);
+                });
+            }
+
+            /**
+             * Create a new named slot from current editor content.
+             */
+            function slotSave() {
+                const name = prompt('Save new Version as:', '');
+                if (!name) return;
+
+                const slots = getSlots();
+                if (slots[name] !== undefined) {
+                    if (!confirm('Version "' + name + '" already exists. Overwrite?')) return;
+                }
+
+                slots[name] = editor.getValue();
+                saveSlots(slots);
+                populateSlotDropdown();
+                slotSelect.value = name;
+                localStorage.setItem(LS_ACTIVE_SLOT, name);
+            }
+
+            /**
+             * Rename the currently selected slot.
+             */
+            function slotRename() {
+                const oldName = slotSelect.value;
+                if (!oldName) return;
+
+                const newName = prompt('New Name:', oldName);
+                if (!newName || newName === oldName) return;
+
+                const slots = getSlots();
+                slots[newName] = slots[oldName];
+                delete slots[oldName];
+                saveSlots(slots);
+                populateSlotDropdown();
+                slotSelect.value = newName;
+                localStorage.setItem(LS_ACTIVE_SLOT, newName);
+            }
+
+            /**
+             * Delete the currently selected slot.
+             */
+            function slotDelete() {
+                const name = slotSelect.value;
+                if (!name) return;
+                if (!confirm('Delete Version "' + name + '" ?')) return;
+
+                const slots = getSlots();
+                delete slots[name];
+                saveSlots(slots);
+                populateSlotDropdown();
+                localStorage.removeItem(LS_ACTIVE_SLOT);
+
+                // Fall back to autosave or default
+                const fallback = localStorage.getItem(LS_AUTOSAVE) || window.cssContent || '';
+                editor.setValue(fallback, -1);
+            }
+
+            /**
+             * Reset editor to the default CSS from style.js.
+             */
+            function resetToDefault() {
+                if (!confirm('Reset to Standard-CSS?')) return;
+                editor.setValue(window.cssContent || '', -1);
+                slotSelect.value = '';
+                localStorage.removeItem(LS_ACTIVE_SLOT);
+                localStorage.removeItem(LS_AUTOSAVE);
+            }
+
+            // =========================================================
+            //  Color Panel
+            // =========================================================
+
+            /**
+             * Insert a text snippet at the current cursor position in the editor.
+             * @param {string} text - Text to insert
+             */
+            function insertAtCursor(text) {
+                editor.session.insert(editor.getCursorPosition(), text);
+                editor.focus();
+            }
+
+            /**
+             * Build the palette panel from the global CSS_PALETTES array.
+             */
+            function populateColorPalettes() {
+                colorPalettes.innerHTML = '';
+                const palettes = window.CSS_PALETTES || [];
+
+                palettes.forEach(function (palette) {
+                    // Group container
+                    const group = document.createElement('div');
+                    group.className = 'color-panel-group';
+
+                    // Group label
+                    const label = document.createElement('div');
+                    label.className = 'color-panel-group-name';
+                    label.textContent = palette.name;
+                    group.appendChild(label);
+
+                    // Swatches row
+                    const swatches = document.createElement('div');
+                    swatches.className = 'color-panel-swatches';
+
+                    palette.colors.forEach(function (color) {
+                        const swatch = document.createElement('div');
+                        swatch.className = 'color-swatch';
+                        swatch.style.backgroundColor = color;
+                        swatch.title = color;
+                        swatch.addEventListener('click', function () {
+                            insertAtCursor(color);
+                        });
+                        swatches.appendChild(swatch);
+                    });
+
+                    group.appendChild(swatches);
+                    colorPalettes.appendChild(group);
+                });
+            }
+
+            /**
+             * Toggle the color panel visibility.
+             */
+            function toggleColorPanel() {
+                snippetPanel.classList.remove('active');
+                colorPanel.classList.toggle('active');
+            }
+
+            // =========================================================
+            //  Snippet Panel
+            // =========================================================
+
+            /** @type {Array} Loaded snippet groups */
+            let snippetData = [];
+
+            /**
+             * Build the snippet panel from the global CSS_SNIPPETS array.
+             */
+            function populateSnippetPanel() {
+                snippetGroups.innerHTML = '';
+                var data = window.CSS_SNIPPETS || [];
+
+                data.forEach(function (group) {
+                    var groupEl = document.createElement('div');
+                    groupEl.className = 'snippet-group';
+
+                    var label = document.createElement('div');
+                    label.className = 'snippet-group-name';
+                    label.textContent = group.name;
+                    groupEl.appendChild(label);
+
+                    var items = document.createElement('div');
+                    items.className = 'snippet-items';
+
+                    group.items.forEach(function (item) {
+                        var btn = document.createElement('button');
+                        btn.className = 'snippet-btn';
+                        btn.textContent = item.label;
+                        btn.title = item.value;
+
+                        if (item.value.indexOf('\n') !== -1) {
+                            btn.classList.add('snippet-block');
+                        }
+
+                        btn.addEventListener('click', function () {
+                            insertAtCursor(item.value);
+                        });
+
+                        items.appendChild(btn);
+                    });
+
+                    groupEl.appendChild(items);
+                    snippetGroups.appendChild(groupEl);
+                });
+            }
+
+            /**
+             * Toggle the snippet panel. Closes the color panel if open.
+             */
+            function toggleSnippetPanel() {
+                colorPanel.classList.remove('active');
+                snippetPanel.classList.toggle('active');
+            }
+
+
+            // =========================================================
+            //  Event Wiring
+            // =========================================================
+
+            // CSS changes → update preview + jumpmarks + autosave
+            editor.session.on('change', function () {
+                const css = editor.getValue();
+                updatePreviewCSS(css);
+                updateJumpmarks(css);
+                autosave(css);
+            });
+
+            // Jumpmark selected → go to line in editor
+            jumpmarkSelect.addEventListener('change', function () {
+                const line = parseInt(this.value);
+                if (line) {
+                    editor.gotoLine(line, 0, true);
+                    editor.focus();
+                }
+                this.selectedIndex = 0;  // reset to placeholder
+            });
+
+            // Sample selected → update preview HTML
+            sampleSelect.addEventListener('change', function () {
+                loadSample(parseInt(this.value));
+            });
+
+            // Load button → trigger hidden file input
+            btnLoad.addEventListener('click', function () {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function () {
+                if (this.files.length > 0) {
+                    loadCSSFile(this.files[0]);
+                }
+                this.value = '';  // reset so same file can be re-loaded
+            });
+
+            // Save button
+            btnSave.addEventListener('click', saveCSS);
+
+            // Slot-Dropdown
+            slotSelect.addEventListener('change', function () {
+                const name = this.value;
+                localStorage.setItem(LS_ACTIVE_SLOT, name);
+
+                if (name) {
+                    const slots = getSlots();
+                    if (slots[name] !== undefined) {
+                        editor.setValue(slots[name], -1);
+                    }
+                }
+            });
+
+            // Slot buttons
+            btnSlotSave.addEventListener('click', slotSave);
+            btnSlotRename.addEventListener('click', slotRename);
+            btnSlotDelete.addEventListener('click', slotDelete);
+            btnReset.addEventListener('click', resetToDefault);
+
+            // About modal
+            const aboutModal = document.getElementById('about-modal');
+            const btnAbout = document.getElementById('btn-about');
+            const modalClose = document.getElementById('modal-close');
+
+            btnAbout.addEventListener('click', function () {
+                aboutModal.classList.add('active');
+            });
+
+            modalClose.addEventListener('click', function () {
+                aboutModal.classList.remove('active');
+            });
+
+            aboutModal.addEventListener('click', function (e) {
+                // Close when clicking overlay (outside modal)
+                if (e.target === aboutModal) {
+                    aboutModal.classList.remove('active');
+                }
+            });
+
+            // Color panel toggle
+            btnColors.addEventListener('click', toggleColorPanel);
+
+            // Native color picker → update hex display
+            colorPicker.addEventListener('input', function () {
+                colorHex.textContent = this.value;
+            });
+
+            // Insert custom color
+            btnColorInsert.addEventListener('click', function () {
+                insertAtCursor(colorPicker.value);
+            });
+
+            // Snippet panel toggle
+            btnSnippets.addEventListener('click', toggleSnippetPanel);
+
+            // Close both panels when clicking into editor (bestehende Regel erweitern)
+            editor.on('focus', function () {
+                colorPanel.classList.remove('active');
+                snippetPanel.classList.remove('active');
+            });
+
+
+            // Viewport width selection
+            viewportSelect.addEventListener('change', function () {
+                const value = this.value;
+                iframe.style.width = value;
+
+                if (value === '100%') {
+                    iframe.classList.remove('has-viewport');
+                } else {
+                    iframe.classList.add('has-viewport');
+                }
+            });
+
+            // =========================================================
+            //  Initialization
+            // =========================================================
+
+            initIframe();
+            populateSamples();
+            populateSlotDropdown();
+            populateColorPalettes();
+            populateSnippetPanel();
+
+            // Restore active slot or fall back to autosave or default
+            const activeSlot = localStorage.getItem(LS_ACTIVE_SLOT);
+            const slots = getSlots();
+
+            if (activeSlot && slots[activeSlot] !== undefined) {
+                // Restore last active slot
+                editor.setValue(slots[activeSlot], -1);
+                slotSelect.value = activeSlot;
+            } else {
+                // Fall back: autosave → default
+                const savedCSS = localStorage.getItem(LS_AUTOSAVE);
+                editor.setValue(savedCSS || window.cssContent || '', -1);
+            }
+
+            setTimeout(function () {
+                updatePreviewCSS(editor.getValue());
+                loadSample(0);
+                updateJumpmarks(editor.getValue());
+            }, 50);
+
+        })();
+    </script>
+</body>
+
+</html>
