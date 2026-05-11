@@ -81,6 +81,7 @@ css-editor/
     ├── mode-css.js                     CSS syntax highlighting
     ├── theme-github_light_default.js   GitHub theme
     ├── ext-language_tools.js           Autocompletion
+    ├── ext-searchbox.js                Searchbox
     └── LICENSE                         BSD License (Ajax.org B.V.)
 ```
 

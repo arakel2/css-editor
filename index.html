@@ -633,7 +633,7 @@
     <!-- ===== ACE Editor ===== -->
     <script src="ace/ace.js"></script>
     <script src="ace/mode-css.js"></script>
-    <!-- <script src="ace/theme-github.js"></script> -->
+    <script src="ace/ext-searchbox.js"></script>
     <script src="theme-github_light_default"></script>
     <script src="ace/ext-language_tools.js"></script>
 
@@ -687,7 +687,7 @@
 
             // ---- ACE Editor Setup ----
             const editor = ace.edit('editor');
-            editor.setTheme('ace/theme/github');
+            editor.setTheme('ace/theme/github_light_default');
             editor.session.setMode('ace/mode/css');
             editor.setOptions({
                 fontSize: 15,
