@@ -80,7 +80,8 @@ css-editor/
     ├── theme-github_light_default.js   GitHub theme
     ├── ext-language_tools.js           Autocompletion
     ├── ext-searchbox.js                Searchbox
-    └── LICENSE                         BSD License (Ajax.org B.V.)
+    ├── LICENSE                         BSD License (Ajax.org B.V.)
+    └── ace-color-preview.js            Inline color preview
 ```
 
 
