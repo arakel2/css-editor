@@ -385,7 +385,6 @@
         }
 
         .snippet-btn.snippet-block {
-            /* width: 100%; */
             text-align: left;
             padding: 5px 8px;
         }
@@ -477,6 +476,11 @@
 
         #preview-frame.has-viewport {
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ===== ACE ===== */
+        .ace_search {
+            background-color: #f6f8fa;
         }
     </style>
 </head>
@@ -633,8 +637,6 @@
     <!-- ===== ACE Editor ===== -->
     <script src="ace/ace.js"></script>
     <script src="ace/mode-css.js"></script>
-    <script src="ace/ext-searchbox.js"></script>
-    <script src="theme-github_light_default"></script>
     <script src="ace/ext-language_tools.js"></script>
 
     <!-- ===== Samples (each file registers into window.CSS_SAMPLES) ===== -->
@@ -695,7 +697,17 @@
                 enableBasicAutocompletion: true,
                 enableLiveAutocompletion: true,
                 useWorker: false,
-                wrap: true
+                wrap: true,
+                // enableSnippets: true,
+            });
+
+            editor.commands.addCommand({
+                name: "toggleCommentLines",
+                bindKey: { win: "Ctrl-x", mac: "Cmd-x" },
+                exec: function (editor) {
+                    editor.toggleCommentLines();
+                },
+                readOnly: false
             });
 
             // ---- State ----
