@@ -479,6 +479,10 @@
         }
 
         /* ===== ACE ===== */
+        .ace_gutter {
+            background-color: #f6f8fa !important;
+        }
+
         .ace_search {
             background-color: #f6f8fa;
         }
@@ -638,6 +642,7 @@
     <script src="ace/ace.js"></script>
     <script src="ace/mode-css.js"></script>
     <script src="ace/ext-language_tools.js"></script>
+    <script src="ace/ace-color-preview.js"></script>
 
     <!-- ===== Samples (each file registers into window.CSS_SAMPLES) ===== -->
     <script src="samples/sample1.js"></script>
@@ -691,8 +696,11 @@
             const editor = ace.edit('editor');
             editor.setTheme('ace/theme/github_light_default');
             editor.session.setMode('ace/mode/css');
+            editor.container.style.lineHeight = "1.3";
+            installColorPreviews(editor, { style: "underline", underlineHeight: 3 });
+
             editor.setOptions({
-                fontSize: 15,
+                fontSize: 15,  // DEFAULT FONTSIZE for Editor
                 showPrintMargin: false,
                 enableBasicAutocompletion: true,
                 enableLiveAutocompletion: true,
@@ -709,6 +717,30 @@
                 },
                 readOnly: false
             });
+
+            editor.commands.addCommands([
+                {
+                    name: "increaseFontSize",
+                    bindKey: { win: "Ctrl-Alt-+", mac: "Cmd-Alt-+" },
+                    exec: function (editor) {
+                        editor.setFontSize(editor.getFontSize() + 1);
+                    }
+                },
+                {
+                    name: "decreaseFontSize",
+                    bindKey: { win: "Ctrl-Alt--", mac: "Cmd-Alt--" },
+                    exec: function (editor) {
+                        editor.setFontSize(Math.max(8, editor.getFontSize() - 1));
+                    }
+                },
+                {
+                    name: "resetFontSize",
+                    bindKey: { win: "Ctrl-Alt-R", mac: "Cmd-Alt-R" },
+                    exec: function (editor) {
+                        editor.setFontSize(15); // Default fontsize
+                    }
+                }
+            ]);
 
             // ---- State ----
             let currentFileName = 'style.css';
