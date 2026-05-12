@@ -486,6 +486,11 @@
         .ace_search {
             background-color: #f6f8fa;
         }
+
+        .ace_comment {
+            color: #2f9e44 !important;
+            /* font-weight: 600; */
+        }
     </style>
 </head>
 
@@ -711,12 +716,30 @@
 
             editor.commands.addCommand({
                 name: "toggleCommentLines",
-                bindKey: { win: "Ctrl-x", mac: "Cmd-x" },
+                bindKey: { win: "Ctrl-#", mac: "Cmd-/" },  // mac stays with /
                 exec: function (editor) {
                     editor.toggleCommentLines();
                 },
                 readOnly: false
             });
+
+            addRawKeybinding(editor, "#", { ctrl: true }, function (editor) {
+                editor.toggleCommentLines();
+            });
+            // { ctrl: true, alt: true }
+
+            function addRawKeybinding(editor, key, modifiers, callback) {
+                editor.container.addEventListener("keydown", function (e) {
+                    if (e.key === key
+                        && e.ctrlKey === !!modifiers.ctrl
+                        && e.shiftKey === !!modifiers.shift
+                        && e.altKey === !!modifiers.alt) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        callback(editor);
+                    }
+                }, true);
+            }
 
             editor.commands.addCommands([
                 {
