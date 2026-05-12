@@ -50,7 +50,46 @@
 > **Requirements:** A modern browser (Firefox, Chrome, Edge, Safari).  
 > Works offline – no server required.
 
+## Keyboard Shortcuts 
 
+### Line Operations
+| Windows/Linux  | Mac                 | Function            |
+| -------------- | ------------------- | ------------------- |
+| Ctrl+D         | Command+D           | Delete current line |
+| Alt+Shift+Down | Command+Option+Down | Copy line down      |
+| Alt+Shift+Up   | Command+Option+Up   | Copy line up        |
+| Alt+Down       | Option+Down         | Move line down      |
+| Alt+Up         | Option+Up           | Move line up        |
+
+### Editor Font Size
+| Windows/Linux  | Mac                 | Function             |
+| -------------- | ------------------- | -------------------- |
+| Ctrl+Alt++     | Ctrl+Alt++          | Increase Font-Size   |
+| Ctrl+Alt+-     | Ctrl+Alt+-          | Decrease Font-Size   |
+| Ctrl+Alt+R     | Ctrl+Alt+R          | Reset Font-Size   |
+
+### Multi-Cursor
+| Windows/Linux  | Mac               | Function                                   |
+| -------------- | ----------------- | ------------------------------------------ |
+| Ctrl+Alt+Up    | Ctrl+Option+Up    | Add cursor above                           |
+| Ctrl+Alt+Down  | Ctrl+Option+Down  | Add cursor below                           |
+| Ctrl+Alt+Right | Ctrl+Option+Right | Add next occurrence to multi-selection     |
+| Ctrl+Alt+Left  | Ctrl+Option+Left  | Add previous occurrence to multi-selection |
+
+### Find & Replace
+| Windows/Linux | Mac              | Function      |
+| ------------- | ---------------- | ------------- |
+| Ctrl+F        | Command+F        | Find          |
+| Ctrl+H        | Command+Option+F | Replace       |
+| Ctrl+G        | Command+G        | Find next     |
+| Ctrl+Shift+G  | Command+Shift+G  | Find previous |
+
+### Undo / Redo / Toggle Comment
+| Windows/Linux      | Mac       | Function       |
+| ------------------ | --------- | -------------- |
+| Ctrl+Z             | Command+Z | Undo           |
+| Ctrl+Y             | Command+Y | Redo           |
+| Ctrl+/  or  Ctrl+# | Command+/ | Toggle comment |
 
 ## 📂 File Structure
 
