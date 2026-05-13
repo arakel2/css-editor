@@ -213,10 +213,29 @@ function installColorPreviews(editor, opts = {}) {
         return _ctx.fillStyle; // "#rrggbb" or "rgba(…)"
     }
 
+    // ── GET URL  ───────────────────────────────────────────
+    function getUrlRanges(line) {
+        const ranges = [];
+        const re = /url\([^)]*\)/gi;
+        let m;
+        while ((m = re.exec(line)) !== null) {
+            ranges.push({ start: m.index, end: m.index + m[0].length });
+        }
+        return ranges;
+    }
+
+    function isInsideUrl(urlRanges, pos) {
+        for (const r of urlRanges) {
+            if (pos >= r.start && pos < r.end) return true;
+        }
+        return false;
+    }
+
     // ── 4. Find Colors in a Line ─────────────────────────────────────────
     function findColorsInLine(text) {
         const results = [];
-        const seen = new Set(); // avoid overlapping matches
+        const seen = new Set();
+        const urlRanges = getUrlRanges(text);
 
         function collect(regex, line) {
             regex.lastIndex = 0;
@@ -226,6 +245,7 @@ function installColorPreviews(editor, opts = {}) {
                 const end = start + m[0].length;
                 const key = `${start}:${end}`;
                 if (seen.has(key)) continue;
+                if (isInsideUrl(urlRanges, start)) continue;
                 const resolved = resolveColor(m[0]);
                 if (!resolved) continue;
                 seen.add(key);
@@ -246,40 +266,43 @@ function installColorPreviews(editor, opts = {}) {
         id: null,
 
         update(_html, markerLayer, session, config) {
-            const firstRow = config.firstRow;
-            const lastRow = config.lastRow;
             const charW = config.characterWidth;
             const lineH = config.lineHeight;
             const padding = markerLayer.$padding || 0;
 
-            for (let row = firstRow; row <= lastRow; row++) {
-                const line = session.getLine(row);
+            // ── Screen-Rows → Document-Rows (Fix for wrap: true) ──────────
+            const firstDocRow = session.screenToDocumentRow(config.firstRow, 0);
+            const lastDocRow = session.screenToDocumentRow(config.lastRow, 0);
+
+            for (let docRow = firstDocRow; docRow <= lastDocRow; docRow++) {
+                const line = session.getLine(docRow);
                 if (!line) continue;
 
                 const colors = findColorsInLine(line);
                 if (!colors.length) continue;
 
                 for (const c of colors) {
-                    const screenStart = session.documentToScreenColumn(
-                        row,
+                    // ── Document-Position → Screen-Position ────────────────────
+                    const screenStart = session.documentToScreenPosition(
+                        docRow,
                         c.start,
                     );
-                    const screenEnd = session.documentToScreenColumn(
-                        row,
+                    const screenEnd = session.documentToScreenPosition(
+                        docRow,
                         c.end,
                     );
-                    const top = markerLayer.$getTop(row, config);
-                    const left = padding + screenStart * charW;
-                    const width = (screenEnd - screenStart) * charW;
+
+                    const top = markerLayer.$getTop(screenStart.row, config);
+                    const left = padding + screenStart.column * charW;
+                    const width = (screenStart.row === screenEnd.row)
+                        ? (screenEnd.column - screenStart.column) * charW
+                        : (session.getScreenWidth() - screenStart.column) *
+                            charW;
 
                     if (style === "swatch") {
-                        // Limit size to max. 1 charakter width
-                        const size = Math.round(
-                            Math.min(lineH * 0.6, charW * 0.85),
-                        );
-                        const gap = Math.round(charW * 0.2); // Distance to value
+                        const size = Math.round(lineH * 0.7);
                         const topOff = top + Math.round((lineH - size) / 2);
-                        const leftPos = Math.max(padding, left - size - gap);
+                        const leftPos = Math.max(padding, left - size - 2);
 
                         markerLayer.elt(
                             "ace_color_preview ace_color_swatch",
@@ -292,8 +315,8 @@ function installColorPreviews(editor, opts = {}) {
                                 `pointer-events:none;z-index:5;`,
                         );
                     } else {
-                        // ── Underline  ──────────────────────────────
-                        const ulGap = Math.round(lineH * 0.01); // Gap Text → Line
+                        const ulGap = Math.round(lineH * -0.1);
+
                         markerLayer.elt(
                             "ace_color_preview ace_color_underline",
                             `position:absolute;` +
