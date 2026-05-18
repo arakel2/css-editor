@@ -1,6 +1,6 @@
 window.CSS_SAMPLES = window.CSS_SAMPLES || [];
 window.CSS_SAMPLES.push({
-    name: 'Navigation',
+    name: "Navigation",
     html: `
         <nav class="navbar">
             <div class="nav-brand">MySite</div>
@@ -41,5 +41,5 @@ window.CSS_SAMPLES.push({
             <span class="tag">Flexbox</span>
             <span class="tag">Grid</span>
         </div>
-    `
+    `,
 });

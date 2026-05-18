@@ -650,6 +650,7 @@
     <script src="ace/ace-color-preview.js"></script>
 
     <!-- ===== Samples (each file registers into window.CSS_SAMPLES) ===== -->
+    <script src="samples/sample10.js"></script>
     <script src="samples/sample1.js"></script>
     <script src="samples/sample2.js"></script>
     <script src="samples/sample3.js"></script>
@@ -657,6 +658,9 @@
     <script src="samples/sample5.js"></script>
     <script src="samples/sample6.js"></script>
     <script src="samples/sample7.js"></script>
+    <script src="samples/sample8.js"></script>
+    <script src="samples/sample9.js"></script>
+
 
     <!-- ===== Default CSS content ===== -->
     <script src="style.js"></script>
@@ -783,11 +787,28 @@
                     '<!DOCTYPE html>',
                     '<html><head>',
                     '<meta charset="UTF-8">',
+                    '<base href="' + window.location.href.replace(/[^/]*$/, '') + '">',
                     '<style id="user-css"></style>',
                     '</head><body></body></html>'
                 ].join(''));
                 doc.close();
+
+                // Intercept anchor links to prevent base-URL navigation
+                doc.addEventListener('click', function (e) {
+                    const link = e.target.closest('a');
+                    if (!link) return;
+                    const href = link.getAttribute('href');
+                    if (href && href.startsWith('#')) {
+                        e.preventDefault();
+                        const id = href.slice(1);
+                        const target = doc.getElementById(id);
+                        if (target) {
+                            target.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }
+                });
             }
+
 
             /**
              * Update only the CSS inside the iframe.

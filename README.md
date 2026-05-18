@@ -26,12 +26,13 @@
 | 💾 Version control | Save, rename, and delete named CSS versions in `localStorage` |
 | 📂 File I/O | Load `.css` files from disk · Download your CSS anytime |
 | 🔖 Section jumps | Navigate large stylesheets via `/* === Section Name === */` comments |
-| 👁️ HTML samples | Seven built-in templates (typography, tables, forms, cards, navigation, code, lists) |
+| 👁️ HTML samples | Ten built-in templates covering typography, lists, tables, forms, cards, <br />navigation, code, media, admonitions, and a full-page layout |
 | 🔄 Reset button | Restore the default stylesheet with one click |
 | 📱 Isolated preview | Preview runs in an `<iframe>` — your CSS never leaks into the editor UI |
 | 💾 Persistent storage | Your work is saved automatically to `localStorage` |
 | ⚙️ Zero dependencies | A single HTML file plus a few scripts. Easy to understand, easy to extend. |
 | 🎨 Easy customization | Add your own templates, color palettes, and snippets |
+| 🌗 Theme switching | Default CSS uses `:root` variables — swap light/dark theme via snippets |
 
 
 ## Screenshot
@@ -91,38 +92,6 @@
 | Ctrl+Y             | Command+Y | Redo           |
 | Ctrl+/  or  Ctrl+# | Command+/ | Toggle comment |
 
-## 📂 File Structure
-
-```
-css-editor/
-├── index.html          Main application
-├── style.js            Default CSS loaded on first run
-├── assets/
-│   ├── favicon-32x32.png
-│   ├── favicon-16x16.png
-│   └── icon-180x180.png
-├── palettes/
-│   └── default.js      Default color palettes
-├── snippets/
-│   └── default.js      Default snippets
-├── samples/
-│   ├── sample1.js      Standard Elements
-│   ├── sample2.js      Lists
-│   ├── sample3.js      Tables
-│   ├── sample4.js      Forms
-│   ├── sample5.js      Card Layout
-│   ├── sample6.js      Navigation
-│   └── sample7.js      Code & Pre
-└── ace/
-    ├── ace.js                          ACE editor core
-    ├── mode-css.js                     CSS syntax highlighting
-    ├── theme-github_light_default.js   GitHub theme
-    ├── ext-language_tools.js           Autocompletion
-    ├── ext-searchbox.js                Searchbox
-    ├── LICENSE                         BSD License (Ajax.org B.V.)
-    └── ace-color-preview.js            Inline color preview
-```
-
 
 
 ## ⚙️ Customization
@@ -132,7 +101,7 @@ css-editor/
 Create a new file in the `samples/` folder:
 
 ```js
-// samples/sample8.js
+// samples/sample11.js
 window.CSS_SAMPLES = window.CSS_SAMPLES || [];
 window.CSS_SAMPLES.push({
     name: 'My Custom Sample',
@@ -146,8 +115,14 @@ window.CSS_SAMPLES.push({
 Then add the script tag in `index.html` (before the app script):
 
 ```html
-<script src="samples/sample8.js"></script>
+<script src="samples/sample11.js"></script>
 ```
+
+### Add Your Own Images 🖼️
+
+Place images in `samples/images/` and reference them in your samples
+with relative paths, e.g. `<img src="samples/images/img01.jpg">`.
+
 
 ### Use Your Own Default CSS 💻
 
